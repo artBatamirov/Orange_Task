@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu</title>
+    <link href="/static/bar_style.css" rel="stylesheet">
+
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="" class="navbar-brand">O'range</a>
+            <ul class="navbar-menu" >
+                <li><a href="http://127.0.0.1:8080/planer/">ежедневник</a></li>
+                <li><a href="http://127.0.0.1:8080/notes/">заметки</a></li>
+                <li><a href="http://127.0.0.1:8080/statistics/">статистика</a></li>
+                <li><a href="http://127.0.0.1:8080/settings/">настройки</a></li>
+
+            </ul>
+        </div>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html>
