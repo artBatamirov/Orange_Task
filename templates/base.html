@@ -5,17 +5,26 @@
     <title>Menu</title>
     <link href="/static/bar_style.css" rel="stylesheet">
 
+
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
             <a href="" class="navbar-brand">O'range</a>
-            <ul class="navbar-menu" >
-                <li><a href="http://127.0.0.1:8080/planer/">ежедневник</a></li>
-                <li><a href="http://127.0.0.1:8080/notes/">заметки</a></li>
-                <li><a href="http://127.0.0.1:8080/statistics/">статистика</a></li>
-                <li><a href="http://127.0.0.1:8080/settings/">настройки</a></li>
 
+            <ul class="navbar-menu" >
+                {% if current_user.is_authenticated %}
+                <li><a href="/planer/">ежедневник</a></li>
+                <li><a href="/notes/">заметки</a></li>
+                <li><a href="/statistics/">статистика</a></li>
+                <li><a href="/settings/">настройки</a></li>
+                
+                <li><a class="navbar-brand" href="">{{ current_user.name }}</a></li>
+                <li><a  href="/logout">Выйти</a></li>
+                {% else %}
+                <li><a class="btn btn-primary " href="/register">Зарегистрироваться</a></li>
+                <li><a class="btn btn-success" href="/login">Войти</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>

@@ -1,14 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <ul>
-        <li >понедельник</li>
+        <h2>{{datetime_now}}</h2>
             <ul type="none">
                 {% for item in planer_list %}
                     <li><input type="checkbox">{{item}}</li>
                 {% endfor %}
                 <li><input type="text"></li>
             </ul>
-        <li></li>
-    </ul>
 {% endblock %}
