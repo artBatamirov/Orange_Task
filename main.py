@@ -5,8 +5,9 @@ from data.users import User
 import datetime
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, login_required, logout_user, login_user
+from flask_login import LoginManager, login_required, logout_user, login_user, current_user
 from forms.log_form import LoginForm
+from forms.add_task_form import TaskForm
 from data.tasks import Task
 
 app = Flask(__name__)
@@ -16,6 +17,7 @@ app.config['SECRET_KEY'] = SECRET_KEY
 db_session.global_init("db/task_app.db")
 login_manager = LoginManager()
 login_manager.init_app(app)
+datetime_now = datetime.datetime.now()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -24,12 +26,14 @@ def load_user(user_id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    global  current_user
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
+            current_user = user
             return redirect("/")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
@@ -71,11 +75,39 @@ def reqister():
 
 @app.route('/planer/', methods=['GET', 'POST'])
 def planer():
+    global datetime_now
+    form = TaskForm()
     if request.method == 'GET':
-        n = datetime.datetime.now
+        planer_list = []
+        db_sess = db_session.create_session()
+        if current_user.is_authenticated:
+            planer_list = db_sess.query(Task).filter(Task.user == current_user).all()
 
-        return render_template('planer.html', planer_list=['h1', 'hhh2', 'hjhg'],
-                               datetime_now=datetime.datetime.now().strftime('%d %B %A'))
+            db_sess.close()
+        return render_template('planer.html', planer_list=planer_list,
+                               datetime_now=datetime_now.strftime('%d %B %A'), form=form)
+    if request.method == 'POST':
+        if request.form.get('plus') is not None:
+            datetime_now += datetime.timedelta(days=1)
+        if request.form.get('minus') is not None:
+            datetime_now -= datetime.timedelta(days=1)
+        if request.form.get('backnow') is not None:
+            datetime_now = datetime.datetime.now()
+        print(form.title.data)
+        if form.validate_on_submit():
+            if current_user.is_authenticated:
+                print(form.title.data)
+                # db_sess = db_session.create_session()
+                # new_task = Task()
+                # new_task.title = request.form.get('new_task')
+                # new_task.user_id = current_user.id
+                # current_user.tasks.append(new_task)
+                # db_sess.commit()
+                # db_sess.close()
+
+        return redirect("/planer/")
+
+
 
 
 

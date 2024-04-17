@@ -1,11 +1,72 @@
 {% extends "base.html" %}
 
 {% block content %}
-        <h2>{{datetime_now}}</h2>
+        <form action="" method="POST">
+        <h2><button method="POST" type="submit" name="minus"> < </button>
+            {{datetime_now}}<button type="submit" name="plus" method="POST"> > </button>
+        <button type="submit"  method="POST" name="backnow"> <-- </button></h2>
+
             <ul type="none">
                 {% for item in planer_list %}
-                    <li><input type="checkbox">{{item}}</li>
+                    <li><input type="checkbox">{{item.title}}</li>
                 {% endfor %}
-                <li><input type="text"></li>
-            </ul>
+                </ul>
+
+        </form>
+<form action="" method="POST">
+                {{ form.hidden_tag() }}
+
+                {{ form.title.label }}<br>
+                {{ form.title(class="form-control") }}<br>
+                {% for error in form.title.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.description.label }}<br>
+                {{ form.description(class="form-control") }}<br>
+                {% for error in form.description.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.category.label }}<br>
+                {{ form.category(class="form-control") }}<br>
+                {% for error in form.category.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.date_time.label }}<br>
+                {{ form.date_time(class="form-control", type="datetime-local") }}<br>
+                {% for error in form.date_time.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.importance.label }}<br>
+                {{ form.importance(class="form-control") }}<br>
+                {% for error in form.importance.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+                <div>{{ message }}</div>
+
+        </form>
 {% endblock %}

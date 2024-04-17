@@ -18,7 +18,7 @@ class User(SqlAlchemyBase, UserMixin):
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
-    news = orm.relationship("Task", back_populates='user')
+    tasks = orm.relationship("Task", back_populates='user')
     notes = orm.relationship("Note", back_populates='user')
 
     def set_password(self, password):
