@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form action="" method="POST">
+                {{ form.hidden_tag() }}
+
+                {{ form.title.label }}<br>
+                {{ form.title(class="form-control") }}<br>
+                {% for error in form.title.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.description.label }}<br>
+                {{ form.description(class="form-control") }}<br>
+                {% for error in form.description.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.category.label }}<br>
+                {{ form.category(class="form-control") }}<br>
+                {% for error in form.category.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.date_time.label }}<br>
+                {{ form.date_time(class="form-control", type="datetime-local") }}<br>
+                {% for error in form.date_time.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>
+                {{ form.importance.label }}<br>
+                {{ form.importance(class="form-control") }}<br>
+                {% for error in form.importance.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                </p>
+
+                <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+                <div>{{ message }}</div>
+
+        </form>
+{% endblock %}

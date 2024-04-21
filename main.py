@@ -22,7 +22,7 @@ datetime_now = datetime.datetime.now()
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
-    return db_sess.query(User).get(user_id)
+    return db_sess.query(User).get(int(user_id))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -33,8 +33,8 @@ def login():
         user = db_sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            current_user = user
-            return redirect("/")
+            # current_user = user
+            return redirect("/planer/")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
@@ -76,16 +76,25 @@ def reqister():
 @app.route('/planer/', methods=['GET', 'POST'])
 def planer():
     global datetime_now
-    form = TaskForm()
+
     if request.method == 'GET':
         planer_list = []
         db_sess = db_session.create_session()
         if current_user.is_authenticated:
             planer_list = db_sess.query(Task).filter(Task.user == current_user).all()
-
-            db_sess.close()
-        return render_template('planer.html', planer_list=planer_list,
-                               datetime_now=datetime_now.strftime('%d %B %A'), form=form)
+            for i in planer_list:
+                print()
+            # for i in planer_list:
+            #     if i.date_time is not None:
+            #         print(i.date_time.date())
+            # db_sess.close()
+        if current_user.is_authenticated:
+            return render_template('planer.html', planer_list=planer_list,
+                               datetime_now=datetime_now.strftime('%d %B %A'))
+        else:
+            return redirect("/")
+            # return render_template('planer.html', planer_list=planer_list,
+            #                        datetime_now=datetime_now.strftime('%d %B %A'), form=form)
     if request.method == 'POST':
         if request.form.get('plus') is not None:
             datetime_now += datetime.timedelta(days=1)
@@ -93,20 +102,44 @@ def planer():
             datetime_now -= datetime.timedelta(days=1)
         if request.form.get('backnow') is not None:
             datetime_now = datetime.datetime.now()
-        print(form.title.data)
-        if form.validate_on_submit():
-            if current_user.is_authenticated:
-                print(form.title.data)
-                # db_sess = db_session.create_session()
-                # new_task = Task()
-                # new_task.title = request.form.get('new_task')
-                # new_task.user_id = current_user.id
-                # current_user.tasks.append(new_task)
-                # db_sess.commit()
-                # db_sess.close()
+        db_sess = db_session.create_session()
+        print(list(request.form.get('ckecking')))
+        for item in list(request.form.items()):
+            task = db_sess.query(Task).filter(Task.id == int(item[1])).first()
+            if task.status == 'не выполнено':
+                task.status = 'выполнено'
+            else:
+                task.status = 'не выполнено'
+            db_sess.commit()
+            db_sess.close()
+
 
         return redirect("/planer/")
 
+@app.route('/add_task/', methods=['GET', 'POST'])
+def adding_task():
+    global datetime_now
+    form = TaskForm()
+    if form.validate_on_submit():
+        print(1)
+        if current_user.is_authenticated:
+            print(form.data)
+
+            db_sess = db_session.create_session()
+            new_task = Task()
+            new_task.title = form.title.data
+            new_task.description = form.description.data
+            new_task.category = form.category.data
+            new_task.date_time = form.date_time.data
+            new_task.importance = form.importance.data
+            # new_task.user_id = current_user.id
+            # db_sess.add(new_task)
+            current_user.tasks.append(new_task)
+            db_sess.merge(current_user)
+            db_sess.commit()
+            db_sess.close()
+        return redirect("/planer/")
+    return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
 
 
 
