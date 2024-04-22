@@ -2,20 +2,40 @@
 
 {% block content %}
         <form action="" method="POST">
-        <h2><button method="POST" type="submit" name="minus"> < </button>
-            {{datetime_now}}<button type="submit" name="plus" method="POST"> > </button>
-        <button type="submit"  method="POST" name="backnow"> <-- </button></h2>
+        <h2><button method="POST" type="submit" name="minus" class="btn btn-outline-primary"> < </button>
+            {{datetime_now}}<button type="submit" name="plus" method="POST" class="btn btn-outline-primary"> > </button>
+        <button class="btn btn-outline-primary" type="submit"  method="POST" name="backnow"> <-- </button></h2>
 
             <ul type="none">
                 {% for item in planer_list %}
-                    <li><input type="checkbox" onClick="submit();" name="{{item.id}}" {% if item.status == "выполнено" %}checked {%endif%}>
-                        {% if item.status == "выполнено"%}<s>{{item.title}}</s>{% else %} {{item.title}} {% endif%}
-                    {{item.category}}
-                    {{item.description}}
-                    {{item.date_time}}</li>
+                <details class="{% if item.importance == 'низкая' %} alert alert-success
+                {% elif item.importance == 'средняя'%}alert alert-warning
+                {% elif item.importance == 'высокая'%} alert alert-danger
+                {% else %} alert alert-light {% endif%}">
+                    <summary><input type="checkbox" onClick="submit();" name="{{item.id}}" {% if item.status == 'выполнено' %}checked {%endif%}>
+                        {% if item.status == "выполнено"%}<s>{{item.title}} {{item.time}}</s>{% else %} {{item.title}} {{item.time}}{% endif%} </summary>
+                    категория: {{item.category}}<br>
+                    описание: {{item.description}}
+                </details>
                 {% endfor %}
                 </ul>
 
         </form>
-        <a href="/add_task/">Создать задачу</a>
+        <a href="/add_task/" ><button class="btn btn-primary">Создать задачу</button></a>
+<button class="show-notification-button">
+    Show Notification
+  </button>
+
+  <script>
+    const button = document.querySelector('.show-notification-button')
+
+    button.addEventListener('click', () => {
+      Notification.requestPermission().then((permissionResult) => {
+        if (permissionResult === 'granted') {
+          console.log('Can show notifications')
+        }
+      })
+    })
+
+  </script>
 {% endblock %}

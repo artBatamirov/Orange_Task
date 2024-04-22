@@ -10,6 +10,7 @@ from forms.log_form import LoginForm
 from forms.add_task_form import TaskForm
 from data.tasks import Task
 
+
 app = Flask(__name__)
 app.debug = True
 SECRET_KEY = os.urandom(32)
@@ -18,6 +19,8 @@ db_session.global_init("db/task_app.db")
 login_manager = LoginManager()
 login_manager.init_app(app)
 datetime_now = datetime.datetime.now()
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -81,9 +84,9 @@ def planer():
         planer_list = []
         db_sess = db_session.create_session()
         if current_user.is_authenticated:
-            planer_list = db_sess.query(Task).filter(Task.user == current_user).all()
+            planer_list = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
             for i in planer_list:
-                print()
+                i.time = i.time.strftime('%H:%M')
             # for i in planer_list:
             #     if i.date_time is not None:
             #         print(i.date_time.date())
@@ -103,15 +106,15 @@ def planer():
         if request.form.get('backnow') is not None:
             datetime_now = datetime.datetime.now()
         db_sess = db_session.create_session()
-        print(list(request.form.get('ckecking')))
-        for item in list(request.form.items()):
-            task = db_sess.query(Task).filter(Task.id == int(item[1])).first()
-            if task.status == 'не выполнено':
-                task.status = 'выполнено'
+        current_tasks = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
+        checks = list(map(lambda x: int(x[0]), list(request.form.items())))
+        for item in current_tasks:
+            if int(item.id) in checks:
+                item.status = 'выполнено'
             else:
-                task.status = 'не выполнено'
-            db_sess.commit()
-            db_sess.close()
+                item.status = 'не выполнено'
+        db_sess.commit()
+        db_sess.close()
 
 
         return redirect("/planer/")
@@ -130,7 +133,8 @@ def adding_task():
             new_task.title = form.title.data
             new_task.description = form.description.data
             new_task.category = form.category.data
-            new_task.date_time = form.date_time.data
+            new_task.date = form.date_time.data.date()
+            new_task.time = form.date_time.data.time()
             new_task.importance = form.importance.data
             # new_task.user_id = current_user.id
             # db_sess.add(new_task)
@@ -140,7 +144,6 @@ def adding_task():
             db_sess.close()
         return redirect("/planer/")
     return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
-
 
 
 
