@@ -1,3 +1,4 @@
+import schedule
 from flask import Flask, render_template, redirect, request
 from data import db_session
 from forms.reg_form import RegisterForm
@@ -9,6 +10,10 @@ from flask_login import LoginManager, login_required, logout_user, login_user, c
 from forms.log_form import LoginForm
 from forms.add_task_form import TaskForm
 from data.tasks import Task
+from  message_control import send_email, check_tasks
+from apscheduler.schedulers.background import BackgroundScheduler
+from threading import Thread
+import atexit
 
 
 app = Flask(__name__)
@@ -19,6 +24,8 @@ db_session.global_init("db/task_app.db")
 login_manager = LoginManager()
 login_manager.init_app(app)
 datetime_now = datetime.datetime.now()
+os.environ['EmailPassword'] = 'zxuj aaqh bhbf ykvg'
+
 
 
 
@@ -146,6 +153,17 @@ def adding_task():
     return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
 
 
+def job():
+    print('yyyyyy')
 
 if __name__ == '__main__':
+    schedule.every().minute.at(":00").do(job)
+    schedule.run_pending()
+    # scheduler = BackgroundScheduler()
+    # scheduler.add_job(job, "interval", seconds=60)
+    # scheduler.start()
+    # atexit.register(lambda: scheduler.shutdown())
+    # t = Thread(target=job)
+    # t.start()
     app.run(port=8080, host='127.0.0.1')
+
