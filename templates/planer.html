@@ -2,9 +2,10 @@
 
 {% block content %}
         <form action="" method="POST">
-        <h2><button method="POST" type="submit" name="minus" class="btn btn-outline-primary"> < </button>
-            {{datetime_now}}<button type="submit" name="plus" method="POST" class="btn btn-outline-primary"> > </button>
-        <button class="btn btn-outline-primary" type="submit"  method="POST" name="backnow"> <-- </button></h2>
+        <h2><button method="POST" type="submit" name="minus"
+                    class="btn btn-outline-primary" {% if no_back %} disabled {% endif%}>&larr; </button>
+            {{datetime_now}}<button type="submit" name="plus" method="POST" class="btn btn-outline-primary"> &rarr; </button>
+        <button class="btn btn-outline-primary" type="submit"  method="POST" name="backnow"> &#8634; </button></h2>
 
             <ul type="none">
                 {% for item in planer_list %}
@@ -13,7 +14,7 @@
                 {% elif item.importance == 'высокая'%} alert alert-danger
                 {% else %} alert alert-light {% endif%}">
                     <summary><input type="checkbox" onClick="submit();" name="{{item.id}}" {% if item.status == 'выполнено' %}checked {%endif%}>
-                        {% if item.status == "выполнено"%}<s>{{item.title}} {{item.time}}</s>{% else %} {{item.title}} {{item.time}}{% endif%} </summary>
+                        {% if item.status == "выполнено"%}<s>{{item.title}} {{item.time}}</s>{% else %} {{item.title}} {{item.time}}{% endif%} <button  class="btn btn-outline-primary" >&#9998;</button ><button class="btn btn-outline-primary">&#10060;</button></summary>
                     категория: {{item.category}}<br>
                     описание: {{item.description}}
                 </details>

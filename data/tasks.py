@@ -19,4 +19,4 @@ class Task(SqlAlchemyBase):
     time = sqlalchemy.Column(sqlalchemy.Time, nullable=True)
     importance = sqlalchemy.Column(sqlalchemy.Integer, default=3)
 
-    user = orm.relationship('User')
+    user = orm.relationship('User', lazy='subquery')

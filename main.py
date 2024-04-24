@@ -12,7 +12,6 @@ from forms.add_task_form import TaskForm
 from data.tasks import Task
 from  message_control import send_email, check_tasks
 from apscheduler.schedulers.background import BackgroundScheduler
-from threading import Thread
 import atexit
 
 
@@ -25,6 +24,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 datetime_now = datetime.datetime.now()
 os.environ['EmailPassword'] = 'zxuj aaqh bhbf ykvg'
+no_back = False
 
 
 
@@ -43,7 +43,6 @@ def login():
         user = db_sess.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            # current_user = user
             return redirect("/planer/")
         return render_template('login.html',
                                message="Неправильный логин или пароль",
@@ -55,6 +54,7 @@ def index():
     return render_template('base.html')
 
 @app.route('/logout')
+
 @login_required
 def logout():
     logout_user()
@@ -84,8 +84,10 @@ def reqister():
     return render_template('register.html', title='Регистрация', form=form)
 
 @app.route('/planer/', methods=['GET', 'POST'])
+@login_required
 def planer():
     global datetime_now
+    global no_back
 
     if request.method == 'GET':
         planer_list = []
@@ -94,27 +96,26 @@ def planer():
             planer_list = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
             for i in planer_list:
                 i.time = i.time.strftime('%H:%M')
-            # for i in planer_list:
-            #     if i.date_time is not None:
-            #         print(i.date_time.date())
-            # db_sess.close()
         if current_user.is_authenticated:
             return render_template('planer.html', planer_list=planer_list,
-                               datetime_now=datetime_now.strftime('%d %B %A'))
+                               datetime_now=datetime_now.strftime('%d %B %A'), no_back=no_back)
         else:
             return redirect("/")
-            # return render_template('planer.html', planer_list=planer_list,
-            #                        datetime_now=datetime_now.strftime('%d %B %A'), form=form)
+
     if request.method == 'POST':
         if request.form.get('plus') is not None:
             datetime_now += datetime.timedelta(days=1)
         if request.form.get('minus') is not None:
-            datetime_now -= datetime.timedelta(days=1)
+            if (datetime.datetime.now() - datetime_now - datetime.timedelta(days=1)).days >= 6:
+                no_back = True
+            else:
+                datetime_now -= datetime.timedelta(days=1)
+                no_back = False
         if request.form.get('backnow') is not None:
             datetime_now = datetime.datetime.now()
         db_sess = db_session.create_session()
         current_tasks = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
-        checks = list(map(lambda x: int(x[0]), list(request.form.items())))
+        checks = list(map(lambda x: int(x[0]), filter(lambda x: x[0].isdigit(), list(request.form.items()))))
         for item in current_tasks:
             if int(item.id) in checks:
                 item.status = 'выполнено'
@@ -127,6 +128,7 @@ def planer():
         return redirect("/planer/")
 
 @app.route('/add_task/', methods=['GET', 'POST'])
+@login_required
 def adding_task():
     global datetime_now
     form = TaskForm()
@@ -153,16 +155,15 @@ def adding_task():
     return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
 
 
-def job():
-    print('yyyyyy')
 
 if __name__ == '__main__':
-    schedule.every().minute.at(":00").do(job)
-    schedule.run_pending()
-    # scheduler = BackgroundScheduler()
-    # scheduler.add_job(job, "interval", seconds=60)
-    # scheduler.start()
-    # atexit.register(lambda: scheduler.shutdown())
+
+
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(check_tasks, "cron", second='0')
+        scheduler.start()
+        atexit.register(lambda: scheduler.shutdown())
     # t = Thread(target=job)
     # t.start()
     app.run(port=8080, host='127.0.0.1')
