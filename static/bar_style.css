@@ -76,3 +76,8 @@
   display: inline;
   margin-left: 50px;
 }
+
+.scroll_list{
+    overflow-y: auto;
+    height: 80vh;
+}

@@ -53,15 +53,6 @@
                 {% endfor %}
                 </p>
 
-                <p>
-                {{ form.lst.label }}<br>
-                {{ form.lst(class="form-control") }}<br>
-                {% for error in form.lst.errors %}
-                <div class="alert alert-danger" role="alert">
-                    {{ error }}
-                </div>
-                {% endfor %}
-                </p>
 
                 <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
                 <div>{{ message }}</div>

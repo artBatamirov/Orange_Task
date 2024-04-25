@@ -1,5 +1,5 @@
 import schedule
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, url_for
 from data import db_session
 from forms.reg_form import RegisterForm
 from data.users import User
@@ -23,16 +23,21 @@ db_session.global_init("db/task_app.db")
 login_manager = LoginManager()
 login_manager.init_app(app)
 datetime_now = datetime.datetime.now()
-os.environ['EmailPassword'] = 'zxuj aaqh bhbf ykvg'
 no_back = False
+os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
+if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    os.environ['EMAIL_PASS'] = input('Password:')
 
 
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    db_sess = db_session.create_session()
-    return db_sess.query(User).get(int(user_id))
+    try:
+        db_sess = db_session.create_session()
+        return db_sess.query(User).get(user_id)
+    except Exception as e:
+        print(e)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -103,6 +108,20 @@ def planer():
             return redirect("/")
 
     if request.method == 'POST':
+        db_sess = db_session.create_session()
+        lst = list(request.form.items())
+        for i in filter(lambda x: 'del' in x[0], lst):
+            task = db_sess.query(Task).filter(Task.id == i[0].split('_')[1]).first()
+            db_sess.delete(task)
+            db_sess.commit()
+        for i in filter(lambda x: 'edit' in x[0], lst):
+            task = db_sess.query(Task).filter(Task.id == i[0].split('_')[1]).first()
+            total_time = datetime.datetime.combine(task.date, task.time).strftime('%d/%m/%Y/%H:%M')
+            information = ' '.join([task.title, total_time, task.category, task.importance, task.description])
+            db_sess.delete(task)
+            db_sess.commit()
+            return redirect(url_for('adding_task', add_form=information))
+            # return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
         if request.form.get('plus') is not None:
             datetime_now += datetime.timedelta(days=1)
         if request.form.get('minus') is not None:
@@ -113,7 +132,7 @@ def planer():
                 no_back = False
         if request.form.get('backnow') is not None:
             datetime_now = datetime.datetime.now()
-        db_sess = db_session.create_session()
+
         current_tasks = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
         checks = list(map(lambda x: int(x[0]), filter(lambda x: x[0].isdigit(), list(request.form.items()))))
         for item in current_tasks:
@@ -132,11 +151,18 @@ def planer():
 def adding_task():
     global datetime_now
     form = TaskForm()
+    if request.args.get('add_form'):
+        information = request.args.get('add_form').split()
+        print(information)
+        form.title.data = information[0]
+        if len(information) == 5:
+            form.description.data = information[4]
+        form.category.data = information[2]
+        form.importance.data = information[3]
+        form.date_time.data = datetime.datetime.strptime(information[1], '%d/%m/%Y/%H:%M')
     if form.validate_on_submit():
-        print(1)
         if current_user.is_authenticated:
-            print(form.data)
-
+            print(1)
             db_sess = db_session.create_session()
             new_task = Task()
             new_task.title = form.title.data
@@ -151,7 +177,10 @@ def adding_task():
             db_sess.merge(current_user)
             db_sess.commit()
             db_sess.close()
+        else:
+            print(2)
         return redirect("/planer/")
+
     return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
 
 
@@ -164,7 +193,10 @@ if __name__ == '__main__':
         scheduler.add_job(check_tasks, "cron", second='0')
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())
+
     # t = Thread(target=job)
     # t.start()
+
     app.run(port=8080, host='127.0.0.1')
+
 

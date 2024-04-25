@@ -1,14 +1,13 @@
 import smtplib
 import os
 from email.mime.text import MIMEText
-from flask_login import current_user
 from data import db_session
 from data.tasks import Task
 import datetime
 
 def send_email(getter, message):
-    sender = 'artem.batamirov@gmail.com'
-    password = 'zxuj aaqh bhbf ykvg'
+    sender = os.environ.get('MY_EMAIL')
+    password = os.environ.get('EMAIL_PASS')
 
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
@@ -32,7 +31,7 @@ def check_tasks():
         try:
             print(task.user.email)
             message = f'Задание: {task.title}\nВремя: {task.time.strftime("%H:%M")}\nКатегория: {task.category}' \
-                      f'\nОписание: {task.description}\nВажность: {task.importance}'
+                      f'Важность: {task.importance}\nОписание: {task.description}'
             print(send_email(task.user.email, message))
         except Exception as e:
             print(e)
