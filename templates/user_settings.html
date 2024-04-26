@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <form action="" method="POST" >
+            <h2>Настройки аккаунта</h2>
+            <p>Имя пользователя: <input name="name" type="text" value="{{name}}"></p>
+            <p>Электронная почта: <input name="email" type="" value="{{email}}"></p>
+            <p>Дата создания: {{date}}</p>
+            <button type="submit" class="btn btn-outline-primary">Сохранить</button><button class="btn btn-outline-primary" name="del" type="submit" onclick=' confirm("Вы действительно хотите отправить данные формы?") ? this.form.submit() : ""'>Удалить</button>
+
+
+
+
+        </form>
+
+{% endblock %}
