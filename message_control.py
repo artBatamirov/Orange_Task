@@ -31,7 +31,7 @@ def check_tasks():
         try:
             print(task.user.email)
             message = f'Задание: {task.title}\nВремя: {task.time.strftime("%H:%M")}\nКатегория: {task.category}\n' \
-                      f'Важность: {task.importance}\nОписание: {task.description}'
+                      f'\nВажность: {task.importance}\nОписание: {task.description}'
             print(send_email(task.user.email, message))
         except Exception as e:
             print(e)

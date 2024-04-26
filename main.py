@@ -25,8 +25,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 datetime_now = datetime.datetime.now()
 no_back = False
-edit_form = None
-edit_val = False
+# edit_form = None
+# edit_val = False
 os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
 if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
     os.environ['EMAIL_PASS'] = input('Password:')
@@ -95,8 +95,6 @@ def reqister():
 def planer():
     global datetime_now
     global no_back
-    global edit_val
-    global edit_form
 
     if request.method == 'GET':
         planer_list = []
@@ -121,17 +119,17 @@ def planer():
             db_sess.commit()
         for i in filter(lambda x: 'edit' in x[0], lst):
             task = db_sess.query(Task).filter(Task.id == i[0].split('_')[1]).first()
-            if edit_form is None:
-                edit_form = TaskForm()
-            edit_form.title.data = task.title
-            edit_form.description.data = task.description
-            edit_form.category.data = task.category
-            edit_form.importance.data = task.importance
-            edit_form.date_time.data = datetime.datetime.combine(task.date, task.time)
-            db_sess.delete(task)
-            db_sess.commit()
-            edit_val = True
-            return redirect('/edit_task/')
+            # if edit_form is None:
+            #     edit_form = TaskForm()
+            # edit_form.title.data = task.title
+            # edit_form.description.data = task.description
+            # edit_form.category.data = task.category
+            # edit_form.importance.data = task.importance
+            # edit_form.date_time.data = datetime.datetime.combine(task.date, task.time)
+            # # db_sess.delete(task)
+            # # db_sess.commit()
+            # edit_val = True
+            return redirect(f'/edit_task/{i[0].split("_")[1]}')
 
             # total_time = datetime.datetime.combine(task.date, task.time).strftime('%d/%m/%Y/%H:%M')
             # information = ' '.join([task.title, total_time, task.category, task.importance, task.description])
@@ -181,21 +179,34 @@ def user_page():
                            date=current_user.created_date.strftime('%d %m %Y %H:%M'),
                            email=current_user.email)
 
-@app.route('/edit_task/', methods=['GET', 'POST'])
+@app.route('/edit_task/<int:task_id>', methods=['GET', 'POST'])
 @login_required
-def edit_task():
+def edit_task(task_id):
     global datetime_now
-    global edit_form
-    global edit_val
-    form = TaskForm()
-    if edit_val:
-        data = list(edit_form)
-        edit_val = False
-        form.title.data = data[0].data
-        form.description.data = data[1].data
-        form.category.data = data[2].data
-        form.date_time.data = data[3].data
-        form.importance.data = data[4].data
+
+    db_sess = db_session.create_session()
+    task = db_sess.query(Task).filter(Task.id == task_id, Task.user == current_user).first()
+
+    if task:
+        data = [task.title, task.category, datetime.datetime.combine(task.date, task.time),
+                task.importance, task.description]
+        form = TaskForm()
+        form.title.data = task.title
+        form.description.data = task.description
+        form.category.data = task.category
+        form.importance.data = task.importance
+        form.date_time.data = datetime.datetime.combine(task.date, task.time)
+    else:
+        return redirect("http://www.exemple.com/404")
+
+    # if edit_val:
+    #     data = list(edit_form)
+    #     edit_val = False
+    #     form.title.data = data[0].data
+    #     form.description.data = data[1].data
+    #     form.category.data = data[2].data
+    #     form.date_time.data = data[3].data
+    #     form.importance.data = data[4].data
 
         # form.data = edit_form.data
     # global add_form
@@ -213,10 +224,9 @@ def edit_task():
     # #     form.date_time.data = datetime.datetime.strptime(information[1], '%d/%m/%Y/%H:%M')
     if request.method == 'POST':
         # if form.validate_on_submit():
-        if current_user.is_authenticated:
-            print(form.data)
-            db_sess = db_session.create_session()
-            new_task = Task()
+        if current_user.is_authenticated and form.validate_on_submit():
+            print('yuyu', form.data)
+            new_task = db_sess.query(Task).filter(Task.id == task_id, Task.user == current_user).first()
             new_task.title = form.title.data
             new_task.description = form.description.data
             new_task.category = form.category.data
@@ -225,13 +235,14 @@ def edit_task():
             new_task.importance = form.importance.data
             # new_task.user_id = current_user.id
             # db_sess.add(new_task)
-            current_user.tasks.append(new_task)
-            db_sess.merge(current_user)
+            # current_user.tasks.append(new_task)
+            # db_sess.merge(current_user)
             db_sess.commit()
             db_sess.close()
         return redirect("/planer/")
 
     return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
+
 
 @app.route('/add_task/', methods=['GET', 'POST'])
 @login_required

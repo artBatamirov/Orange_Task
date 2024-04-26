@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Orange Task</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='icon-orange.png') }}">
     <link href="/static/bar_style.css" rel="stylesheet">
     <link rel="stylesheet"
                     href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"
@@ -10,27 +12,31 @@
                     crossorigin="anonymous">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity=
             "sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-
+    <style>
+    body{
+        background-color: #fdf9f2;
+        }
+    </style>
 
 
 </head>
-<body>
+<body >
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
             <div class="navbar-header">
-            <a href="" class="navbar-brand">O'range</a>
+            <img width="15%" src="{{ url_for('static', filename='icon-orange.png') }}"> <a href="" class="navbar-brand">O'range Task</a>
         </div>
             <ul class="nav navbar-nav" >
                 {% if current_user.is_authenticated %}
-                <li class="nav-item"><a href="/planer/" class="nav-link fs-5" aria-current="page">ежедневник</a></li>
-                <li class="nav-item"><a href="/notes/" class="nav-link fs-5">заметки</a></li>
-                <li class="nav-item"><a href="/statistics/" class="nav-link fs-5">статистика</a></li>
-                <li class="nav-item"><a href="/settings/" class="nav-link fs-5">настройки</a></li>
+                <li class="nav-item"><a  href="/planer/" class="nav-link fs-5" style="color: #FFA07A" aria-current="page">ежедневник</a></li>
+                <li class="nav-item"><a href="/notes/" class="nav-link fs-5" style="color: #FFA07A">заметки</a></li>
+                <li class="nav-item"><a href="/statistics/" class="nav-link fs-5" style="color: #FFA07A">статистика</a></li>
+                <li class="nav-item"><a href="/settings/" class="nav-link fs-5" style="color: #FFA07A">настройки</a></li>
 
                 </ul>
              <ul class="nav navbar-nav navbar-right">
                 <li><a class="navbar-brand" href="/user_page/">{{ current_user.name }}</a></li>
-                <li><a  href="/logout" class="nav-link">Выйти</a></li>
+                <li><a  href="/logout" class="nav-link link-success" >Выйти</a></li>
                 </ul>
                 {% else %}
              <ul class="nav navbar-nav navbar-right">
