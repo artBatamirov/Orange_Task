@@ -29,7 +29,9 @@ no_back = False
 # edit_val = False
 os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
 if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-    os.environ['EMAIL_PASS'] = input('Password:')
+    # os.environ['EMAIL_PASS'] = input('Password:')
+    os.environ['EMAIL_PASS'] = 'zxuj aaqh bhbf ykvg'
+
 
 
 
@@ -38,6 +40,7 @@ if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
 def load_user(user_id):
     try:
         db_sess = db_session.create_session()
+        login_manager.session_protection = 'strong'
         return db_sess.query(User).get(user_id)
     except Exception as e:
         print(e)
@@ -103,6 +106,9 @@ def planer():
             planer_list = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
             for i in planer_list:
                 i.time = i.time.strftime('%H:%M')
+            planer_list.sort(key=lambda x: x.time)
+            planer_list.sort(key=lambda x: x.importance)
+            planer_list.sort(key=lambda x: x.status, reverse=True)
         if current_user.is_authenticated:
             return render_template('planer.html', planer_list=planer_list,
                                datetime_now=datetime_now.strftime('%d %B %A'), no_back=no_back)
@@ -191,40 +197,17 @@ def edit_task(task_id):
         data = [task.title, task.category, datetime.datetime.combine(task.date, task.time),
                 task.importance, task.description]
         form = TaskForm()
-        form.title.data = task.title
-        form.description.data = task.description
-        form.category.data = task.category
-        form.importance.data = task.importance
-        form.date_time.data = datetime.datetime.combine(task.date, task.time)
+        # form.title.data = task.title
+        # form.description.data = task.description
+        # form.category.data = task.category
+        # form.importance.data = task.importance
+        # form.date_time.data = datetime.datetime.combine(task.date, task.time)
     else:
         return redirect("http://www.exemple.com/404")
-
-    # if edit_val:
-    #     data = list(edit_form)
-    #     edit_val = False
-    #     form.title.data = data[0].data
-    #     form.description.data = data[1].data
-    #     form.category.data = data[2].data
-    #     form.date_time.data = data[3].data
-    #     form.importance.data = data[4].data
-
-        # form.data = edit_form.data
-    # global add_form
-    # if add_form is None:
-    #     add_form = TaskForm()
-    # # form = TaskForm()
-    # # if request.args.get('add_form'):
-    # #     information = request.args.get('add_form').split()
-    # #     print(information)
-    # #     form.title.data = information[0]
-    # #     if len(information) == 5:
-    # #         form.description.data = information[4]
-    # #     form.category.data = information[2]
-    # #     form.importance.data = information[3]
-    # #     form.date_time.data = datetime.datetime.strptime(information[1], '%d/%m/%Y/%H:%M')
     if request.method == 'POST':
         # if form.validate_on_submit():
-        if current_user.is_authenticated and form.validate_on_submit():
+        print('hi', form.data)
+        if form.data.get('submit') and current_user.is_authenticated:
             print('yuyu', form.data)
             new_task = db_sess.query(Task).filter(Task.id == task_id, Task.user == current_user).first()
             new_task.title = form.title.data
@@ -233,15 +216,11 @@ def edit_task(task_id):
             new_task.date = form.date_time.data.date()
             new_task.time = form.date_time.data.time()
             new_task.importance = form.importance.data
-            # new_task.user_id = current_user.id
-            # db_sess.add(new_task)
-            # current_user.tasks.append(new_task)
-            # db_sess.merge(current_user)
             db_sess.commit()
             db_sess.close()
         return redirect("/planer/")
-
-    return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
+    print(form.data)
+    return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form, inf=data)
 
 
 @app.route('/add_task/', methods=['GET', 'POST'])
@@ -249,19 +228,6 @@ def edit_task(task_id):
 def adding_task():
     global datetime_now
     form = TaskForm()
-    # global add_form
-    # if add_form is None:
-    #     add_form = TaskForm()
-    # # form = TaskForm()
-    # # if request.args.get('add_form'):
-    # #     information = request.args.get('add_form').split()
-    # #     print(information)
-    # #     form.title.data = information[0]
-    # #     if len(information) == 5:
-    # #         form.description.data = information[4]
-    # #     form.category.data = information[2]
-    # #     form.importance.data = information[3]
-    # #     form.date_time.data = datetime.datetime.strptime(information[1], '%d/%m/%Y/%H:%M')
     if form.validate_on_submit():
         if current_user.is_authenticated:
             db_sess = db_session.create_session()
@@ -280,7 +246,7 @@ def adding_task():
             db_sess.close()
             return redirect("/planer/")
 
-    return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
+    return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form, inf=[])
 
 
 
@@ -292,9 +258,6 @@ if __name__ == '__main__':
         scheduler.add_job(check_tasks, "cron", second='0')
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())
-
-    # t = Thread(target=job)
-    # t.start()
 
     app.run(port=8080, host='127.0.0.1')
 
