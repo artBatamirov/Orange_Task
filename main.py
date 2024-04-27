@@ -25,6 +25,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 datetime_now = datetime.datetime.now()
 no_back = False
+importance_val = {'низкая': 3, 'средняя': 2, 'высокая': 1}
+importance_val_reverse = {3: 'низкая', 2: 'средняя', 1: 'высокая'}
+sort_choice = 1
 # edit_form = None
 # edit_val = False
 os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
@@ -98,6 +101,7 @@ def reqister():
 def planer():
     global datetime_now
     global no_back
+    global sort_choice
 
     if request.method == 'GET':
         planer_list = []
@@ -106,12 +110,26 @@ def planer():
             planer_list = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
             for i in planer_list:
                 i.time = i.time.strftime('%H:%M')
-            planer_list.sort(key=lambda x: x.time)
-            planer_list.sort(key=lambda x: x.importance)
+                i.importance = importance_val_reverse[i.importance]
+            if sort_choice == 2:
+                planer_list.sort(key=lambda x: x.time)
+                planer_list.sort(key=lambda x: x.importance)
+            if sort_choice == 1:
+                planer_list.sort(key=lambda x: x.importance)
+                planer_list.sort(key=lambda x: x.time)
+            if sort_choice == 3:
+
+                planer_list.sort(key=lambda x: x.importance)
+
+                planer_list.sort(key=lambda x: x.time)
+                planer_list.sort(key=lambda x: x.category)
+
+
+
             planer_list.sort(key=lambda x: x.status, reverse=True)
         if current_user.is_authenticated:
             return render_template('planer.html', planer_list=planer_list,
-                               datetime_now=datetime_now.strftime('%d %B %A'), no_back=no_back)
+                               datetime_now=datetime_now.strftime('%d %B %A'), no_back=no_back, choice=sort_choice)
         else:
             return redirect("/")
 
@@ -125,24 +143,7 @@ def planer():
             db_sess.commit()
         for i in filter(lambda x: 'edit' in x[0], lst):
             task = db_sess.query(Task).filter(Task.id == i[0].split('_')[1]).first()
-            # if edit_form is None:
-            #     edit_form = TaskForm()
-            # edit_form.title.data = task.title
-            # edit_form.description.data = task.description
-            # edit_form.category.data = task.category
-            # edit_form.importance.data = task.importance
-            # edit_form.date_time.data = datetime.datetime.combine(task.date, task.time)
-            # # db_sess.delete(task)
-            # # db_sess.commit()
-            # edit_val = True
             return redirect(f'/edit_task/{i[0].split("_")[1]}')
-
-            # total_time = datetime.datetime.combine(task.date, task.time).strftime('%d/%m/%Y/%H:%M')
-            # information = ' '.join([task.title, total_time, task.category, task.importance, task.description])
-            # db_sess.delete(task)
-            # db_sess.commit()
-            # return redirect(url_for('adding_task', add_form=information))
-            # return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form)
         if request.form.get('plus') is not None:
             datetime_now += datetime.timedelta(days=1)
         if request.form.get('minus') is not None:
@@ -153,6 +154,8 @@ def planer():
                 no_back = False
         if request.form.get('backnow') is not None:
             datetime_now = datetime.datetime.now()
+        if request.form.get('choice'):
+            sort_choice = int(request.form.get('choice'))
 
         current_tasks = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
         checks = list(map(lambda x: int(x[0]), filter(lambda x: x[0].isdigit(), list(request.form.items()))))
@@ -215,7 +218,7 @@ def edit_task(task_id):
             new_task.category = form.category.data
             new_task.date = form.date_time.data.date()
             new_task.time = form.date_time.data.time()
-            new_task.importance = form.importance.data
+            new_task.importance = importance_val[form.importance.data]
             db_sess.commit()
             db_sess.close()
         return redirect("/planer/")
@@ -237,7 +240,7 @@ def adding_task():
             new_task.category = form.category.data
             new_task.date = form.date_time.data.date()
             new_task.time = form.date_time.data.time()
-            new_task.importance = form.importance.data
+            new_task.importance = importance_val[form.importance.data]
             # new_task.user_id = current_user.id
             # db_sess.add(new_task)
             current_user.tasks.append(new_task)

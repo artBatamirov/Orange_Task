@@ -3,13 +3,22 @@
 {% block content %}
         <form action="" method="POST" >
 
-        <h3 color="#fd7e14" class="display-3 " align="center"><button method="POST" type="submit" name="minus"
+        <h3 color="#fd7e14" class="display-3 " align="center">
+            <select name="choice" onchange="this.form.submit()" class="btn btn-light" style="width: 15%; font-size:25%">
+            <option value="1" {% if choice == 1%}selected="selected"{%endif%}>по времени</option>
+            <option value="2" {% if choice == 2%}selected="selected"{%endif%}>по важности</option>
+            <option value="3" {% if choice == 3%}selected="selected"{%endif%}>по категориям</option>
+        </select>
+            <button method="POST" type="submit" name="minus"
                     class="btn btn-outline-success" {% if no_back %} disabled {% endif%}>&larr; </button>
             <div class="badge  text-wrap" style="background-color: #FFA07A;">
             {{datetime_now}}
             </div>
             <button type="submit" name="plus" method="POST" class="btn btn-outline-success"> &rarr; </button>
-        <button class="btn btn-outline-success" type="submit"  method="POST" name="backnow"> &#8634; </button> <a href="/add_task/"><button class="btn btn-success" type="button">Создать задачу</button></a></h3>
+        <button class="btn btn-outline-success" type="submit"  method="POST" name="backnow"> &#8634; </button> <a href="/add_task/"><button class="btn btn-success" type="button">Создать задачу</button></a>
+
+        </h3>
+
 
             <ul type="none" class="scroll_list">
                 <li>

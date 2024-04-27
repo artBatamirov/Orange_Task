@@ -10,5 +10,5 @@ class TaskForm(FlaskForm):
     description = TextAreaField('Оиписание')
     category = SelectField('Категория', choices=['спорт', 'обучение', 'развлечения', 'программирование'])
     date_time = DateTimeLocalField('Дата и время', validators=[DataRequired()])
-    importance = SelectField("Важность", choices=['низкая', 'средняя', 'высокая'])
+    importance = SelectField("Важность", choices=['низкая', 'средняя', 'высокая'], default='низкая')
     submit = SubmitField('Создать')
