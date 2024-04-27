@@ -50,6 +50,8 @@
     color: #E79055;
 }
 
+a:active {color: #fa4700;}
+
 .navbar-brand:hover {
     color: #ED670C;
     transition: all .07s ease-in-out;

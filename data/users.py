@@ -12,7 +12,7 @@ class User(SqlAlchemyBase, UserMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    theme = sqlalchemy.Column(sqlalchemy.String, nullable=False, default='light')
+    sort_choice = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, default=1)
     email = sqlalchemy.Column(sqlalchemy.String,
                               index=True, unique=True, nullable=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
@@ -20,6 +20,7 @@ class User(SqlAlchemyBase, UserMixin):
                                      default=datetime.datetime.now)
     tasks = orm.relationship("Task", back_populates='user', lazy='subquery')
     notes = orm.relationship("Note", back_populates='user')
+    # categories = orm.relationship("Category", back_populates='user')
 
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)

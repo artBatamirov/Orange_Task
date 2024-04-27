@@ -15,7 +15,7 @@ class Task(SqlAlchemyBase):
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     status = sqlalchemy.Column(sqlalchemy.String, default='создано')
     category = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    date = sqlalchemy.Column(sqlalchemy.Date, nullable=False)
+    date = sqlalchemy.Column(sqlalchemy.Date, nullable=True)
     time = sqlalchemy.Column(sqlalchemy.Time, nullable=True)
     importance = sqlalchemy.Column(sqlalchemy.Integer, default=3)
 

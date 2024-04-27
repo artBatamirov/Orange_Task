@@ -31,11 +31,11 @@
                 <li class="nav-item"><a  href="/planer/" class="nav-link fs-5" style="color: #FFA07A" aria-current="page">ежедневник</a></li>
                 <li class="nav-item"><a href="/notes/" class="nav-link fs-5" style="color: #FFA07A">заметки</a></li>
                 <li class="nav-item"><a href="/statistics/" class="nav-link fs-5" style="color: #FFA07A">статистика</a></li>
-                <li class="nav-item"><a href="/settings/" class="nav-link fs-5" style="color: #FFA07A">настройки</a></li>
+                <li class="nav-item"><a href="/user_page/" class="nav-link fs-5" style="color: #FFA07A">настройки</a></li>
 
                 </ul>
              <ul class="nav navbar-nav navbar-right">
-                <li><a class="navbar-brand" href="/user_page/">{{ current_user.name }}</a></li>
+                <li><a class="navbar-brand" href="">{{ current_user.name }}</a></li>
                 <li><a  href="/logout" class="nav-link link-success" >Выйти</a></li>
                 </ul>
                 {% else %}
@@ -47,6 +47,13 @@
         </div>
     </nav>
     {% block content %}{% endblock %}
-
+<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script>
+    $(function () {
+        $('nav li a').filter(function () {
+            return this.href === location.href;
+        }).addClass('active');
+    });
+</script>
 </body>
 </html>

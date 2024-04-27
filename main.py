@@ -27,7 +27,7 @@ datetime_now = datetime.datetime.now()
 no_back = False
 importance_val = {'низкая': 3, 'средняя': 2, 'высокая': 1}
 importance_val_reverse = {3: 'низкая', 2: 'средняя', 1: 'высокая'}
-sort_choice = 1
+# sort_choice = 1
 # edit_form = None
 # edit_val = False
 os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
@@ -101,30 +101,22 @@ def reqister():
 def planer():
     global datetime_now
     global no_back
-    global sort_choice
 
     if request.method == 'GET':
         planer_list = []
         db_sess = db_session.create_session()
+        sort_choice = current_user.sort_choice
         if current_user.is_authenticated:
             planer_list = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
             for i in planer_list:
                 i.time = i.time.strftime('%H:%M')
                 i.importance = importance_val_reverse[i.importance]
             if sort_choice == 2:
-                planer_list.sort(key=lambda x: x.time)
-                planer_list.sort(key=lambda x: x.importance)
+                planer_list.sort(key=lambda x: (importance_val[x.importance], x.time))
             if sort_choice == 1:
-                planer_list.sort(key=lambda x: x.importance)
-                planer_list.sort(key=lambda x: x.time)
+                planer_list.sort(key=lambda x: (x.time, importance_val[x.importance]))
             if sort_choice == 3:
-
-                planer_list.sort(key=lambda x: x.importance)
-
-                planer_list.sort(key=lambda x: x.time)
-                planer_list.sort(key=lambda x: x.category)
-
-
+                planer_list.sort(key=lambda x: (x.category, x.time, importance_val[x.importance]))
 
             planer_list.sort(key=lambda x: x.status, reverse=True)
         if current_user.is_authenticated:
@@ -155,7 +147,9 @@ def planer():
         if request.form.get('backnow') is not None:
             datetime_now = datetime.datetime.now()
         if request.form.get('choice'):
-            sort_choice = int(request.form.get('choice'))
+            current_user.sort_choice = int(request.form.get('choice'))
+            db_sess.merge(current_user)
+            db_sess.commit()
 
         current_tasks = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
         checks = list(map(lambda x: int(x[0]), filter(lambda x: x[0].isdigit(), list(request.form.items()))))
@@ -172,17 +166,20 @@ def planer():
 
 @app.route('/user_page/', methods=['GET', 'POST'])
 @login_required
+
 def user_page():
     db_sess = db_session.create_session()
     if request.method == 'POST':
         current_user.name = request.form.get('name')
         current_user.email = request.form.get('email')
-        db_sess.merge(current_user)
-
-        if request.form.get('del'):
-            db_sess.delete(current_user)
-            return redirect('/logout')
         db_sess.commit()
+        if request.form.get('del') is not None:
+            user = db_sess.query(User).filter(User.id == current_user.id).first()
+            db_sess.delete(user)
+            db_sess.commit()
+            logout_user()
+            return redirect('/')
+
 
     return render_template('user_settings.html', name=current_user.name,
                            date=current_user.created_date.strftime('%d %m %Y %H:%M'),
@@ -254,7 +251,8 @@ def adding_task():
 
 
 if __name__ == '__main__':
-
+    db_sess = db_session.create_session()
+    print(db_sess.query(User).first().sort_choice)
 
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         scheduler = BackgroundScheduler()
