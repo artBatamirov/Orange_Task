@@ -1,18 +1,27 @@
-import schedule
-from flask import Flask, render_template, redirect, request, url_for
+from flask import Flask, render_template, redirect, request, url_for, abort
 from data import db_session
 from forms.reg_form import RegisterForm
 from data.users import User
 import datetime
+from sqlalchemy import and_, or_
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required, logout_user, login_user, current_user
 from forms.log_form import LoginForm
 from forms.add_task_form import TaskForm
 from data.tasks import Task
-from  message_control import send_email, check_tasks
+from message_control import send_email, check_tasks
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
+
+
+def delete_old():
+    db_sess = db_session.create_session()
+    last_date = datetime.datetime.now().date() - datetime.timedelta(days=7)
+    tasks = db_sess.query(Task).filter(Task.date < last_date).all()
+    for task in tasks:
+        db_sess.delete(task)
+    db_sess.commit()
 
 
 app = Flask(__name__)
@@ -27,16 +36,11 @@ datetime_now = datetime.datetime.now()
 no_back = False
 importance_val = {'низкая': 3, 'средняя': 2, 'высокая': 1}
 importance_val_reverse = {3: 'низкая', 2: 'средняя', 1: 'высокая'}
-# sort_choice = 1
-# edit_form = None
-# edit_val = False
 os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
+# os.environ['EMAIL_PASS'] = input('Password:')
+os.environ['EMAIL_PASS'] = 'zxuj aaqh bhbf ykvg'
 if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-    # os.environ['EMAIL_PASS'] = input('Password:')
-    os.environ['EMAIL_PASS'] = 'zxuj aaqh bhbf ykvg'
-
-
-
+    delete_old()
 
 
 @login_manager.user_loader
@@ -48,9 +52,10 @@ def load_user(user_id):
     except Exception as e:
         print(e)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    global  current_user
+    global current_user
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -63,15 +68,18 @@ def login():
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
 
+
 @app.route('/')
 def index():
     return render_template('base.html')
+
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect("/")
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
@@ -96,6 +104,14 @@ def reqister():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
+def delete_task(task_id):
+    db_sess = db_session.create_session()
+    task = db_sess.query(Task).filter(Task.id == int(task_id)).first()
+    if task:
+        db_sess.delete(task)
+    db_sess.commit()
+    db_sess.close()
+    print('deleted complete')
 @app.route('/planer/', methods=['GET', 'POST'])
 @login_required
 def planer():
@@ -121,35 +137,39 @@ def planer():
             planer_list.sort(key=lambda x: x.status, reverse=True)
         if current_user.is_authenticated:
             return render_template('planer.html', planer_list=planer_list,
-                               datetime_now=datetime_now.strftime('%d %B %A'), no_back=no_back, choice=sort_choice)
+                                   datetime_now=datetime_now.strftime('%d %B %A'), no_back=no_back, choice=sort_choice)
         else:
             return redirect("/")
 
     if request.method == 'POST':
-        db_sess = db_session.create_session()
+
         lst = list(request.form.items())
         print(lst)
-        for i in filter(lambda x: 'del' in x[0], lst):
-            task = db_sess.query(Task).filter(Task.id == i[0].split('_')[1]).first()
-            db_sess.delete(task)
-            db_sess.commit()
+
+        db_sess = db_session.create_session()
         for i in filter(lambda x: 'edit' in x[0], lst):
             task = db_sess.query(Task).filter(Task.id == i[0].split('_')[1]).first()
             return redirect(f'/edit_task/{i[0].split("_")[1]}')
         if request.form.get('plus') is not None:
             datetime_now += datetime.timedelta(days=1)
+            if (datetime.datetime.now() - datetime_now - datetime.timedelta(days=1)).days < 6:
+                no_back = False
         if request.form.get('minus') is not None:
+            datetime_now -= datetime.timedelta(days=1)
             if (datetime.datetime.now() - datetime_now - datetime.timedelta(days=1)).days >= 6:
                 no_back = True
-            else:
-                datetime_now -= datetime.timedelta(days=1)
-                no_back = False
         if request.form.get('backnow') is not None:
             datetime_now = datetime.datetime.now()
         if request.form.get('choice'):
             current_user.sort_choice = int(request.form.get('choice'))
             db_sess.merge(current_user)
             db_sess.commit()
+        for i in filter(lambda x: 'del' in x[0], lst):
+            task = db_sess.query(Task).filter(Task.id == int(i[0].split('_')[1])).first()
+            if task:
+                db_sess.delete(task)
+            db_sess.commit()
+            db_sess.close()
 
         current_tasks = db_sess.query(Task).filter(Task.user == current_user, Task.date == datetime_now.date()).all()
         checks = list(map(lambda x: int(x[0]), filter(lambda x: x[0].isdigit(), list(request.form.items()))))
@@ -161,18 +181,21 @@ def planer():
         db_sess.commit()
         db_sess.close()
 
-
         return redirect("/planer/")
+
 
 @app.route('/user_page/', methods=['GET', 'POST'])
 @login_required
-
 def user_page():
+    message = ''
     db_sess = db_session.create_session()
     if request.method == 'POST':
-        current_user.name = request.form.get('name')
-        current_user.email = request.form.get('email')
-        db_sess.commit()
+        if db_sess.query(User).filter(and_(User.id != current_user.id, or_(User.email == request.form.get('email'), User.name == request.form.get('name')))).first():
+            message = 'Такой пользователь уже есть'
+        else:
+            current_user.name = request.form.get('name')
+            current_user.email = request.form.get('email')
+            db_sess.commit()
         if request.form.get('del') is not None:
             user = db_sess.query(User).filter(User.id == current_user.id).first()
             db_sess.delete(user)
@@ -180,10 +203,10 @@ def user_page():
             logout_user()
             return redirect('/')
 
-
     return render_template('user_settings.html', name=current_user.name,
                            date=current_user.created_date.strftime('%d %m %Y %H:%M'),
-                           email=current_user.email)
+                           email=current_user.email, message=message)
+
 
 @app.route('/edit_task/<int:task_id>', methods=['GET', 'POST'])
 @login_required
@@ -197,13 +220,9 @@ def edit_task(task_id):
         data = [task.title, task.category, datetime.datetime.combine(task.date, task.time),
                 task.importance, task.description]
         form = TaskForm()
-        # form.title.data = task.title
-        # form.description.data = task.description
-        # form.category.data = task.category
-        # form.importance.data = task.importance
-        # form.date_time.data = datetime.datetime.combine(task.date, task.time)
     else:
-        return redirect("http://www.exemple.com/404")
+        # return redirect("http://www.exemple.com/404")
+        abort(404)
     if request.method == 'POST':
         # if form.validate_on_submit():
         print('hi', form.data)
@@ -249,17 +268,13 @@ def adding_task():
     return render_template('add_task.html', datetime_now=datetime_now.strftime('%d %B %A'), form=form, inf=[])
 
 
-
 if __name__ == '__main__':
-    db_sess = db_session.create_session()
-    print(db_sess.query(User).first().sort_choice)
 
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         scheduler = BackgroundScheduler()
         scheduler.add_job(check_tasks, "cron", second='0')
+        scheduler.add_job(delete_old, 'cron', hour='0')
         scheduler.start()
         atexit.register(lambda: scheduler.shutdown())
 
     app.run(port=8080, host='127.0.0.1')
-
-
