@@ -269,8 +269,9 @@ def adding_task():
 
 
 if __name__ == '__main__':
-
+    print('Ссылка на сайт https://48116be8-32f7-4556-98f6-93148307116e.tunnel4.com')
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        scheduler = BackgroundScheduler()
         scheduler = BackgroundScheduler()
         scheduler.add_job(check_tasks, "cron", second='0')
         scheduler.add_job(delete_old, 'cron', hour='0')

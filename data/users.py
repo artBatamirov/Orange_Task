@@ -12,6 +12,7 @@ class User(SqlAlchemyBase, UserMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    theme = sqlalchemy.Column(sqlalchemy.String, nullable=True, default='light')
     sort_choice = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, default=1)
     email = sqlalchemy.Column(sqlalchemy.String,
                               index=True, unique=True, nullable=True)
