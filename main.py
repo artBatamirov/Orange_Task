@@ -37,7 +37,6 @@ no_back = False
 importance_val = {'низкая': 3, 'средняя': 2, 'высокая': 1}
 importance_val_reverse = {3: 'низкая', 2: 'средняя', 1: 'высокая'}
 os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
-# os.environ['EMAIL_PASS'] = input('Password:')
 os.environ['EMAIL_PASS'] = 'zxuj aaqh bhbf ykvg'
 if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
     delete_old()
@@ -221,7 +220,6 @@ def edit_task(task_id):
                 task.importance, task.description]
         form = TaskForm()
     else:
-        # return redirect("http://www.exemple.com/404")
         abort(404)
     if request.method == 'POST':
         # if form.validate_on_submit():
