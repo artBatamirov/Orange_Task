@@ -36,8 +36,8 @@ datetime_now = datetime.datetime.now()
 no_back = False
 importance_val = {'низкая': 3, 'средняя': 2, 'высокая': 1}
 importance_val_reverse = {3: 'низкая', 2: 'средняя', 1: 'высокая'}
-os.environ['MY_EMAIL'] = 'artem.batamirov@gmail.com'
-os.environ['EMAIL_PASS'] = 'zxuj aaqh bhbf ykvg'
+os.environ['MY_EMAIL'] = '...@gmail.com' #your email
+os.environ['EMAIL_PASS'] = '...' #your email password for apps
 if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
     delete_old()
 
